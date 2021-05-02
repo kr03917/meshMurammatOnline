@@ -1,7 +1,7 @@
 {
-  "name": "i",
-  "version": "1.0.0",
-  "description": "",
+  "name": "cookie-parser",
+  "version": "1.4.5",
+  "description": "This folder contains the code for the front-end of Mesh Murammat",
   "main": "app.js",
   "dependencies": {
     "cookie-parser": "^1.4.5",
@@ -18,15 +18,17 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node bin/www",
-    "build:dev": "node -j 16 build --debug",
-    "build": "node -j 16 build",
-    "rebuild:dev": "node -j 16 rebuild --debug",
-    "rebuild": "node -j 16 rebuild",
-    "clean": "node clean"
+    "start": "node bin/www"
   },
   "author": "",
   "license": "ISC",
-  "gypfile": true
+  "gypfile": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kr03917/meshMurammatOnline.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kr03917/meshMurammatOnline/issues"
+  },
+  "homepage": "https://github.com/kr03917/meshMurammatOnline#readme"
 }
