@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Home Page</title>
+    <link rel="stylesheet" , type="text/css" , href="/stylesheets/style.css">
+    <style>
+        /* The popup form - hidden by default */
+        .form-popup {
+            display: none;
+        }
+
+        #viewer {
+            color: white;
+        }
+    </style>
+</head>
+
+<body onLoad="onLoad()">
+    <div id=topbar>
+        <div class="dropdown">
+            <button class="dropbtn">File</button>
+            <div class="dropdown-content">
+                <form id="file-upload" name=file-upload enctype="multipart/form-data" method="POST" action='/uploadfile'
+                    onsubmit="return Validate(this)">
+                    <input id="file-input" type="file" name="mesh" onchange="this.form.submit();">
+                </form>
+                <a onclick="exportPLY(scene.children[2])">Export</a>
+                <a onclick="openExportForm()">Export As</a>
+                <form id="export" onsubmit="return closeExportForm()">
+                    <button onclick="this.form.submit(); exportAs(scene.children[2], 'obj')">Export OBJ</button>
+                    <button onclick="this.form.submit(); exportAs(scene.children[2], 'ply')">Export PLY</button>
+                </form>
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="dropbtn">View</button>
+            <div class="dropdown-content">
+                <a href="#">Full Screen</a>
+                <a href="#">View axes/grid</a>
+                <a onclick="loadWireframe()">Wireframe</a>
+                <a onclick="loadBunny()">Solid View</a>
+                <a href="#">Vertex Info</a>
+                <a href="#">Face Info</a>
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="dropbtn">Edit</button>
+            <div class="dropdown-content">
+                <a href="#">Undo</a>
+                <a href="#">Redo</a>
+                <a href="#">Edit History</a>
+            </div>
+        </div>
+    </div>
+    <div id="viewer">
+        <div id="container" style="height: 537px; width: 962px; position:absolute;
+        margin-left: 0px; border-radius: 3px; display: block; float:left;">
+            <div class="dropdown">
+                <button id="tools">Tools &#xf104</button>
+                <div class="dropdown-content-tools">
+                    <a href="#">1</a>
+                    <a href="#">2</a>
+                    <a href="#">3</a>
+                    <a href="#">4</a>
+                    <a href="#">5</a>
+                    <a href="#">6</a>
+                    <a href="#">7</a>
+                    <a href="#">8</a>
+                </div>
+            </div>
+
+            <div class="form-popup" name="statistics" id="statistics">
+                <form action="/" method="GET">
+                    <h1>Statistics</h1>
+                    <label>No. of Vertices: 35,497</label><br>
+                    <label>No. of edges: 104,288</label><br>
+                    <label>No. of faces: 69,451</label><br>
+                    <label>No. of holes: 5</label><br>
+                    <label>Water Tight: No</label>
+
+                    <button type="button" onclick="closeStats()">OK</button>
+                </form>
+            </div>
+
+            <div class="form-popup" name="denoisePopup" id="denoisePopup">
+                <form action="/" method="GET">
+                    <h1>Hole Filling Options</h1>
+
+                    <label for="question"><b>Do you want to denoise the mesh?</b></label>
+                    <button type="button" onclick=" loadNoisyBunny(); closeDenoisePopup()">No</button>
+                    <button type="button" onclick=" loadBunny(); closeDenoisePopup()">Yes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="sidebar">
+        <div id="stats">
+            <button id="statsbutton" onclick=openStats(); fun()>STATISTICS</button>
+        </div>
+        <div id="filloptions">
+            <button class="fillbutton" id="detect" onclick=loadHoleHighlight()>DETECT HOLES</button>
+            <button class="fillbutton" id="fill" type="submit" onclick=openDenoisePopup()>FILL HOLES</button>
+        </div>
+        <div id="viewoptions">
+            <p id="adjustments">Adjustments</p>
+            <button class="accordion view">Lighting</button>
+            <div class="panel">
+                <p>Lighting options here</p>
+            </div>
+
+            <button class="accordion view">Shading</button>
+            <div class="panel">
+                <p>Shading options here</p>
+            </div>
+
+            <button class="accordion view">Material</button>
+            <div class="panel">
+                <p>Material options here</p>
+            </div>
+        </div>
+    </div>
+    <div id="foot"></div>
+
+    <script>
+        var acc = document.getElementsByClassName("accordion");
+        var i;
+
+        for (i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function () {
+                this.classList.toggle("active");
+
+                /* Toggle between hiding and showing the active panel */
+                var panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
+        }
+
+        function openStats() {
+            document.getElementById("statistics").style.display = "block";
+        }
+
+        function closeStats() {
+            document.getElementById("statistics").style.display = "none";
+        }
+
+        function openDenoisePopup() {
+            document.getElementById("denoisePopup").style.display = "block";
+        }
+
+        function closeDenoisePopup() {
+            document.getElementById("denoisePopup").style.display = "none";
+        }
+    </script>
+    <script src="https://mrdoob.github.com/three.js/build/three.min.js"></script>
+    <script type="module">
+        import * as THREE from './../../routes/three.module.js';
+    </script>
+    <script src="//cdn.rawgit.com/mrdoob/three.js/r87/examples/js/controls/OrbitControls.js"></script>
+    <script src="//cdn.rawgit.com/mrdoob/three.js/r87/examples/js/loaders/OBJLoader.js"></script>
+    <script src="//cdn.rawgit.com/mrdoob/three.js/r87/examples/js/loaders/PLYLoader.js"></script>
+    <script src="https://unpkg.com/three@0.126.1/examples/js/exporters/PLYExporter.js"></script>
+    <script src="https://unpkg.com/three@0.126.1/examples/js/exporters/OBJExporter.js"></script>
+
+    <script>
+        function loadHoleHighlight() {
+            clearScene();
+            var loader = new THREE.PLYLoader();
+            loader.load('./../routes/edited_bunny.ply', function (geometry) {
+                console.log("ply loaded");
+                geometry.computeVertexNormals();
+                var material = new THREE.MeshStandardMaterial({ vertexColors: THREE.FaceColors });
+
+                var mesh = new THREE.Mesh(geometry, material);
+
+                mesh.position.x = 0;
+                mesh.position.y = 0;
+                mesh.position.z = 0;
+                mesh.scale.multiplyScalar(10);
+
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add(mesh);
+
+            });
+        }
+
+        function loadHighlightPly() {
+            clearScene();
+            var loader = new THREE.PLYLoader();
+            loader.load('./../routes/edited_bunny.ply', function (geometry) {
+                console.log("ply loaded");
+                geometry.computeVertexNormals();
+                //var texture = new THREE.TextureLoader().load('head3d.jpg');
+                var material = new THREE.MeshStandardMaterial({ vertexColors: THREE.FaceColors });
+
+                var mesh = new THREE.Mesh(geometry, material);
+
+                mesh.position.x = 0;
+                mesh.position.y = 0;
+                mesh.position.z = 0;
+                mesh.scale.multiplyScalar(6);
+
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add(mesh);
+
+            });
+        }
+
+        function loadWireframe() {
+            clearScene();
+            var loader = new THREE.PLYLoader();
+            loader.load('./../uploads/polygonaloutput.ply', function (geometry) {
+                console.log("ply loaded");
+                geometry.computeVertexNormals();
+                //var texture = new THREE.TextureLoader().load('head3d.jpg');
+                var material = new THREE.MeshStandardMaterial({ vertexColors: THREE.FaceColors });
+                const wireframe = new THREE.WireframeGeometry(geometry);
+                const line = new THREE.LineSegments(wireframe);
+                line.material.depthTest = false;
+                line.material.opacity = 0.25;
+                line.material.transparent = true;
+                scene.add(line);
+                //console.log(scene.children[0].geometry.vertices);
+            });
+        }
+
+        function loadBunny() {
+            clearScene();
+            const loader = new THREE.OBJLoader();
+            // load a resource
+            loader.load(
+                // resource URL
+                './../images/complete_bunny.obj',
+                // called when resource is loaded
+                function (object) {
+                    scene.add(object);
+                },
+                // called when loading is in progresses
+                function (xhr) {
+                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                },
+                // called when loading has errors
+                function (error) {
+                    console.log('An error happened');
+                }
+            );
+        }
+
+        function loadNoisyBunny() {
+            clearScene();
+            const loader = new THREE.OBJLoader();
+            // load a resource
+            loader.load(
+                // resource URL
+                './../images/bun_zipper_filled.obj',
+                // called when resource is loaded
+                function (object) {
+                    scene.add(object);
+                },
+                // called when loading is in progresses
+                function (xhr) {
+                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                },
+                // called when loading has errors
+                function (error) {
+                    console.log('An error happened');
+                }
+            );
+        }
+
+        function clearScene() {
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+                console.log(scene.children.length);
+            }
+            // Create a directional light to show off the object
+            var light = new THREE.PointLight(0xffffff, 1, 0);
+            light.position.set(50, 50, 50);
+            scene.add(light);
+            var ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+        }
+
+        var renderer = null,
+            scene = null,
+            camera = null;
+
+        var input = document.getElementById('file-input');
+
+        /*Get file input from HTML file upload button*/
+        input.addEventListener('change', function (event) {
+            var file = this.files[0];					//Get the input file
+            var reader = new FileReader();				//Asynchronously read file content	
+
+            /*Listener is used to wait until file is loaded*/
+            reader.addEventListener('load', function (event) {
+                var contents = event.target.result;
+                //PLY file loading
+                var loader = new THREE.PLYLoader();
+                var mesh = loader.parse(contents);		//Parse the .ply file content to get mesh
+                mesh.computeVertexNormals();
+                var material = new THREE.MeshStandardMaterial({ vertexcolors: THREE.FaceColors });
+                var mesh = new THREE.Mesh(mesh, material);
+                mesh.position.x = 0;
+                mesh.position.y = 0;
+                mesh.position.z = 0;
+                mesh.scale.multiplyScalar(6);
+
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                //OBJ File loading
+                //var mesh = new THREE.OBJLoader().parse(contents);		//Parse the .obj file content to get mesh
+                //
+                clearScene();
+                scene.add(mesh);
+                console.log("file loaded")
+                console.log(scene);
+            }, false);
+
+            /*Error check*/
+            if (reader.readAsBinaryString !== undefined) {
+                reader.readAsBinaryString(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        function onLoad() {
+            // Grab our container div
+            var container = document.getElementById("container");
+
+            // Create the Three.js renderer, add it to our div
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+            container.appendChild(renderer.domElement);
+
+            // Create a new Three.js scene
+            scene = new THREE.Scene();
+
+            // Put in a camera
+            camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+            camera.position.set(0, 0, 3);
+
+            // Create a directional light to show off the object
+            var light = new THREE.PointLight(0xffffff, 1, 0);
+            light.position.set(50, 50, 50);
+            scene.add(light);
+            var ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+
+            //Add controls to zoom in and out
+            var controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.zoomSpeed = 0.4;
+            controls.panSpeed = 0.4;
+
+            // Run our render loop
+            render();
+
+
+        }
+
+        function render() {
+            requestAnimationFrame(render);
+            renderer.render(scene, camera);
+        };
+
+        var saveData = (function () {
+            var a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style = "display: none";
+            return function (data, fileName) {
+                var blob = new Blob([data], { type: "octet/stream" }),
+                    url = window.URL.createObjectURL(blob);
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            };
+        }());
+
+        function exportPLY(mesh) {
+            // Instantiate an exporter
+            var exporter = new THREE.PLYExporter();
+            console.log(mesh);
+            // Parse the input and generate the ply output
+            const data = exporter.parse(mesh);
+            saveData(data, 'ply-output.ply')
+            return data;
+        }
+
+        function exportOBJ(mesh) {
+            // Instantiate an exporter
+            var exporter = new THREE.OBJExporter();
+            // Parse the input and generate the obj output
+            const data = exporter.parse(mesh);
+            saveData(data, 'obj-output.obj')
+        }
+
+        function exportAs(mesh, filetype) {
+            if (filetype = "obj") {
+                exportOBJ(mesh);
+            }
+            else if (filetype = "ply") {
+                exportPLY(mesh);
+            }
+
+        }
+
+        function openExportForm() {
+            document.getElementById("export").style.display = "block";
+        }
+
+        function closeExportForm() {
+            document.getElementById("export").style.display = "none";
+        }
+
+
+        /*var _validFileExtensions = [".ply", ".obj", ".off"];
+        function Validate(oForm) {
+            var arrInputs = oForm.getElementById("file-input");
+            console.log(arrInputs);
+            for (var i = 0; i < arrInputs.length; i++) {
+                var oInput = arrInputs[i];
+                if (oInput.type == "file") {
+                    var sFileName = oInput.value;
+                    if (sFileName.length > 0) {
+                        var blnValid = false;
+                        for (var j = 0; j < _validFileExtensions.length; j++) {
+                            var sCurExtension = _validFileExtensions[j];
+                            if (sFileName.substr(sFileName.length - sCurExtension.length, sCurExtension.length).toLowerCase() == sCurExtension.toLowerCase()) {
+                                blnValid = true;
+                                break;
+                            }
+                        }
+
+                        if (!blnValid) {
+                            alert("Sorry, " + sFileName + " is invalid, allowed extensions are: " + _validFileExtensions.join(", "));
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }*/
+
+
+
+
+    </script>
+
+
+</body>
