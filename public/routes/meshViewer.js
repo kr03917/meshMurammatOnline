@@ -1,8 +1,8 @@
 /*Script for .obj file load on browser*/
 /*Import three.js modules*/
 
-import * as THREE from '../three.module.js';
-import { OBJLoader } from '../../OBJLoader.js';
+import * as THREE from 'three.module.js';
+import { OBJLoader } from 'OBJLoader.js';
 import {OrbitControls} from 'OrbitControls.js';
 	
 /***Main Code***/
