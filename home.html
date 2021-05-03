@@ -157,8 +157,10 @@
         }
     </script>
     <script src="./../../routes/three.min.js"></script>
-    <script src='./../../routes/three.module.js'></script>
-    <!-- <script src="./../../routes/OrbitControls.js"></script> -->
+    <script type="module">
+        import * as THREE from './../../routes/three.module.js';
+        import * from "./../../routes/OrbitControls.js"
+    </script>
     <script src="./../../routes/OBJLoader.js"></script>
     <script src="./../../routes/PLYLoader.js"></script>
     <script src="./../../routes/PLYExporter.js"></script>
