@@ -22,11 +22,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({extended: false}));
 
 app.use('/', indexRouter);
-const port = process.env.PORT || 8000
-app.listen(port, err => {
-  if (err) throw err;
-  console.log("server running");
-});
+app.listen(8000);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
