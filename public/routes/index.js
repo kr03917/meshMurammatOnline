@@ -68,7 +68,7 @@ router.post('/uploadfile', upload.single('mesh'), (req, res, next) => {
 
   var fun =function(){
    console.log("fun() start");
-   exec(path.join('wine ', __dirname, '/meshtype.exe'), file.originalname, { cwd: __dirname }).toString()
+   exec(path.join('wine ', __dirname, '/meshtype.exe'), [file.originalname], { cwd: __dirname }).toString()
    //exec(path.join(__dirname, '/conversion_exe.exe'), [file.originalname, 'ply'], { cwd: __dirname }).toString()
   };  
 
@@ -88,7 +88,7 @@ router.get('/detectholes', (req, res, next) => {
   var fun =function(){
   console.log("fun() start")
    console.log(filename);
-   exec(path.join(__dirname, '/hole_detection_executable.exe'), [filename], { cwd: __dirname }).toString()
+   exec(path.join('wine ', __dirname, '/hole_detection_executable.exe'), [filename], { cwd: __dirname }).toString()
   };  
 
 fun(); 
