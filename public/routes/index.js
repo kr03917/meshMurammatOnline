@@ -2,11 +2,35 @@ var express = require('express');
 var router = express.Router();
 const path = require('path');
 var multer = require('multer');
+var fs = require('fs');
+var bodyParser  = require('body-parser');
+
+const pathToFile = path.join(__dirname, "detected_hole.ply")
+if (fs.existsSync(pathToFile)) {
+  try {
+    fs.unlinkSync(pathToFile)
+    console.log("Successfully deleted the file.")
+  } catch(err) {
+    throw err
+  }
+}
+
+
+router.post('/upload', function(req, res) {
+  fs.writeFile('./public/uploads/bun_zipper.ply', res.body, function(err) {
+    console.log("upload request sent")
+    if (err) {
+      res.send('Something when wrong');
+    } else {
+      res.send('Saved!');
+    }
+  })
+});
 
 // SET STORAGE
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './public/uploads')
+    cb(null, './public/routes')
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname)
@@ -21,31 +45,17 @@ router.get('/meshmurammat', function(req, res, next) {
   
 });
 
-router.get('/PLYExporter', function(req, res, next) {
-  res.sendFile(path.join(__dirname, '/PLYExporter.js'));
-  
-});
 
 /* GET home page. */
 
 router.get('/home', function(req, res, next) {
   res.sendFile(path.join(__dirname, '/../../home.html'));
-  
-  var exec = require('child_process').execFile;
-
-  var fun =function(){
-   //console.log("fun() start");
-   exec(path.join(__dirname, '/mesh.exe'), function(err, data) {  
-        
-        console.log(err)
-        console.log(data.toString());                       
-    });  
-}
-fun();
 });
+
 
 router.post('/uploadfile', upload.single('mesh'), (req, res, next) => {
   console.log("file upload post req sent")
+  
   const file = req.file
   console.log(file)
   if (!file) {
@@ -53,18 +63,37 @@ router.post('/uploadfile', upload.single('mesh'), (req, res, next) => {
     error.httpStatusCode = 400
     return next(error)
   }
-  res.status(204).send(file)
-  var exec = require('child_process').execFile;
+  
+  var exec = require('child_process').execFileSync;
 
   var fun =function(){
-   //console.log("fun() start");
-   exec(path.join(__dirname, '/my_executable.exe'), function(err, data) {  
-        
-        console.log(err)
-        console.log(data.toString());                       
-    });  
-}
-fun();
+   console.log("fun() start");
+   exec(path.join(__dirname, '/meshtype_exe.exe'), [file.originalname], { cwd: __dirname }).toString()
+  };  
+
+fun(); 
+  res.status(204).send(file)
+
+
+});
+
+router.get('/detectholes', (req, res, next) => {
+  console.log("detect holes req sent")
+
+  const filename=req.query["mesh"];
+  
+  var exec = require('child_process').execFileSync;
+
+  var fun =function(){
+  console.log("fun() start")
+   console.log(filename);
+   exec(path.join(__dirname, '/hole_detection_executable.exe'), [filename], { cwd: __dirname }).toString()
+  };  
+
+fun(); 
+  res.status(204).send()
+
+
 });
 
 module.exports = router;

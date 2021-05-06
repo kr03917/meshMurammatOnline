@@ -1,7 +1,7 @@
 {
   "name": "i",
   "version": "1.0.0",
-  "description": "This folder contains the code for the front-end of Mesh Murammat",
+  "description": "",
   "main": "app.js",
   "dependencies": {
     "cookie-parser": "^1.4.5",
@@ -23,14 +23,5 @@
   },
   "author": "",
   "license": "ISC",
-  "gypfile": true,
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kr03917/meshMurammatOnline.git"
-  },
-  "keywords": [],
-  "bugs": {
-    "url": "https://github.com/kr03917/meshMurammatOnline/issues"
-  },
-  "homepage": "https://github.com/kr03917/meshMurammatOnline#readme"
+  "gypfile": true
 }
