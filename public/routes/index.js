@@ -68,7 +68,7 @@ router.post('/uploadfile', upload.single('mesh'), (req, res, next) => {
 
   var fun =function(){
    console.log("fun() start");
-   console.log((path.join('wine ', __dirname, '/meshtype.exe'), [file.originalname], { cwd: __dirname }).toString());
+   console.log(path.join('wine ', __dirname, '/meshtype.exe'), [file.originalname], { cwd: __dirname });
    //exec(path.join('wine ', __dirname, '/meshtype.exe'), [file.originalname], { cwd: __dirname }).toString()
    //exec(path.join(__dirname, '/conversion_exe.exe'), [file.originalname, 'ply'], { cwd: __dirname }).toString()
   };  
