@@ -8,6 +8,11 @@ body
     font-family: 'Raleway';
 }
 
+p
+{
+    display: inline;
+}
+
 #header{
     height: 280px;
     width: 100%;
@@ -161,6 +166,7 @@ body
     margin-left: 0px;
     background-color: black;
     border-radius: 3px;
+    border-width: 2px;
     display: block;
     float:left;
 }
@@ -290,6 +296,12 @@ body
   .dropdown:hover .dropbtn {background-color: gray;}
 
 
+.tools-dropdown{
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+}
+
 .accordion {
     color: #444;
     cursor: pointer;
@@ -324,3 +336,51 @@ body
   .active:after {
     content: "\2796"; /* Unicode character for "minus" sign (-) */
   }
+
+
+  /* The slider itself */
+.slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  width: 150px; 
+  display: inline;
+  height: 10px; /* Specified height */
+  background: #d3d3d3; /* Grey background */
+  outline: none; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  width: 10px; /* Set a specific slider handle width */
+  height: 10px; /* Slider handle height */
+  background: rgba(40, 150, 150, 0.904);
+  cursor: pointer; /* Cursor on hover */
+}
+
+.slider::-moz-range-thumb {
+  width: 10px; /* Set a specific slider handle width */
+  height: 10px; /* Slider handle height */
+  background:rgba(40, 150, 150, 0.904);
+  cursor: pointer; /* Cursor on hover */
+}
+
+#shading-button{
+    width: 63px;
+    height:30px;
+    margin-left: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    color: rgba(40, 150, 150, 0.904);
+    display: inline;
+    border-radius: 2px;
+}

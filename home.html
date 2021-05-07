@@ -41,7 +41,7 @@
                 <a href="#">Full Screen</a>
                 <a href="#">View axes/grid</a>
                 <a onclick="loadWireframe()">Wireframe</a>
-                <a onclick="loadBunny()">Solid View</a>
+                <a onclick="loadSolid()">Solid View</a>
                 <a href="#">Vertex Info</a>
                 <a href="#">Face Info</a>
             </div>
@@ -58,17 +58,6 @@
     <div id="viewer">
         <div id="container" style="height: 537px; width: 962px; position:absolute;
         margin-left: 0px; border-radius: 3px; display: block; float:left;">
-            <div class="dropdown">
-                <button id="tools">Tools &#xf104</button>
-                <div class="dropdown-content-tools">
-                    <div class="tools-dropdown"><i class="icon-zoom-in"></i></div>
-                    <button class="tools-dropdown">2</button>
-                    <button class="tools-dropdown">3</button>
-                    <button class="tools-dropdown">4</button>
-                    <button class="tools-dropdown">5</button>
-                    <button class="tools-dropdown">6</button>
-                </div>
-            </div>
 
             <div class="form-popup" name="statistics" id="statistics">
                 <form action="/" method="GET">
@@ -82,16 +71,6 @@
                     <button type="button" onclick="closeStats()">OK</button>
                 </form>
             </div>
-
-            <div class="form-popup" name="denoisePopup" id="denoisePopup">
-                <form action="/" method="GET">
-                    <h1>Hole Filling Options</h1>
-
-                    <label for="question"><b>Do you want to denoise the mesh?</b></label>
-                    <button type="button" onclick=" loadNoisyBunny(); closeDenoisePopup()">No</button>
-                    <button type="button" onclick=" loadBunny(); closeDenoisePopup()">Yes</button>
-                </form>
-            </div>
         </div>
     </div>
     <div id="sidebar">
@@ -100,28 +79,36 @@
         </div>
         <div id="filloptions">
             <form id="holedetection-form" method="GET" action="/detectholes">
-                <button class="fillbutton" id="detect" onclick=loadHoleHighlight()>DETECT HOLES</button>
-                <input id="hole-input" type="hidden text" name="mesh" value="">
+                <button class="fillbutton" id="detect" onclick=callHighlight()>DETECT HOLES</button>
+                <input id="hole-input" type="text" name="mesh" value="" hidden>
             </form>
 
-            <!--<button id="displaymesh" onclick="loadHoleHighlight()"></button>-->
-            <button class="fillbutton" id="fill" type="submit" onclick=openDenoisePopup()>FILL HOLES</button>
+            <button id="displaymesh" hidden onclick="loadHoleHighlight()"></button>
+
+            <form id="holefill-form" method="GET" action="/fillholes">
+                <button class="fillbutton" id="fill" type="submit" onclick=callFilled()>FILL HOLES</button>
+                <input id="fill-input" hidden type="text" name="mesh" value="">
+            </form>
+
+            <button id="filledmesh" hidden onclick="loadFilledMesh()"></button>
+
         </div>
         <div id="viewoptions">
             <p id="adjustments">Adjustments</p>
             <button class="accordion view">Lighting</button>
             <div class="panel">
-                <p>Lighting options here</p>
-            </div>
+                <p>Intensity:</p>
+                <p id="demo"></p>
+                <input type="range" min="1" max="1000" value="100" class="slider" id="myRange"
+                    onchange="adjust_light(slider.value)">
 
-            <button class="accordion view">Shading</button>
-            <div class="panel">
-                <p>Shading options here</p>
             </div>
 
             <button class="accordion view">Material</button>
             <div class="panel">
-                <p>Material options here</p>
+                <button name="basic" id="shading-button">Basic</button>
+                <button name="lambert" id="shading-button">Lambert</button>
+                <button name="phong" id="shading-button">Phong</button>
             </div>
         </div>
     </div>
@@ -153,13 +140,6 @@
             document.getElementById("statistics").style.display = "none";
         }
 
-        function openDenoisePopup() {
-            document.getElementById("denoisePopup").style.display = "block";
-        }
-
-        function closeDenoisePopup() {
-            document.getElementById("denoisePopup").style.display = "none";
-        }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/87/three.min.js"></script>
     <script type="module">
@@ -174,14 +154,102 @@
     <script>
         $('#file-input').change(function () {
             $('#hole-input').val($(this).val().replace(/^.*\\/, "").replace("obj", "ply").replace("off", "ply"));
+            $('#fill-input').val($(this).val().replace(/^.*\\/, "").replace("obj", "ply").replace("off", "ply"));
         });
 
 
-        /* function clickfunction() {
+
+
+
+
+        function clearScene() {
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+                console.log(scene.children.length);
+            }
+            // Create a directional light to show off the object
+            var light = new THREE.PointLight(0xffffff, 1, 0);
+            light.position.set(50, 50, 50);
+            scene.add(light);
+            var ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+        }
+
+        var renderer = null,
+            scene = null,
+            camera = null;
+
+        var input = document.getElementById('file-input');
+        var currentfilename = ""
+        var valids = [".ply", '.obj']
+        var patterns = /\.[0-9a-z]+$/i;
+        var extension = ""
+
+        /*Get file input from HTML file upload button*/
+        input.addEventListener('change', function (event) {
+            var file = this.files[0];					//Get the input file
+            var reader = new FileReader();				//Asynchronously read file content	
+
+            /*Listener is used to wait until file is loaded*/
+            reader.addEventListener('load', function (event) {
+                var contents = event.target.result;
+                currentfilename = file['name']
+                extension = (currentfilename).match(patterns)[0] //extract extension
+                //PLY file loading
+                if (extension === valids[0]) {
+                    console.log(extension)
+                    console.log(valids[0])
+                    console.log('ply detected')
+                    var loader = new THREE.PLYLoader();
+                    var mesh = loader.parse(contents);		//Parse the .ply file content to get mesh
+                    mesh.computeVertexNormals();
+                    var material = new THREE.MeshStandardMaterial({ vertexcolors: THREE.FaceColors });
+                    var mesh = new THREE.Mesh(mesh, material);
+                    mesh.position.x = 0;
+                    mesh.position.y = 0;
+                    mesh.position.z = 0;
+                    mesh.scale.multiplyScalar(6);
+
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                }
+
+                //OBJ File loading
+                if (extension === valids[1]) {
+                    console.log('obj detected')
+                    var mesh = new THREE.OBJLoader().parse(contents);		//Parse the .obj file content to get mesh
+                }
+
+                clearScene();
+                scene.add(mesh);
+                console.log("file loaded")
+            }, false);
+
+            /*Error check*/
+            if (reader.readAsBinaryString !== undefined) {
+                reader.readAsBinaryString(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        function callHighlight() {
+            console.log(currentfilename)
+            console.log("callHighlight called")
             setTimeout(function () {
                 document.getElementById("displaymesh").click();
-            }, 30000)
-        } */
+            }, 20000)
+            console.log("callHighlight ended")
+        }
+
+        function callFilled() {
+            console.log("callFilled called")
+            setTimeout(function () {
+                document.getElementById("filledmesh").click();
+            }, 20000)
+            console.log("callFilled ended")
+        }
+
         function loadHoleHighlight() {
             clearScene();
             var loader = new THREE.PLYLoader();
@@ -189,7 +257,7 @@
             loader.load('./../routes/detected_hole.ply', function (geometry) {
                 console.log("ply loaded");
                 geometry.computeVertexNormals();
-                var material = new THREE.MeshStandardMaterial({ vertexColors: THREE.FaceColors });
+                var material = new THREE.MeshStandardMaterial({ vertexColors: THREE.FaceColors })
 
                 var mesh = new THREE.Mesh(geometry, material);
 
@@ -210,11 +278,15 @@
 
         function loadWireframe() {
             clearScene();
+            console.log(extension)
+            if (extension === valids[1]) {
+                currentfilename = currentfilename.replace("obj", "ply").replace("off", "ply")
+                console.log(currentfilename)
+            }
             var loader = new THREE.PLYLoader();
-            loader.load('./../uploads/polygonaloutput.ply', function (geometry) {
-                console.log("ply loaded");
+            loader.load('./../routes/' + currentfilename, function (geometry) {
+                console.log('./../routes/' + currentfilename);
                 geometry.computeVertexNormals();
-                //var texture = new THREE.TextureLoader().load('head3d.jpg');
                 var material = new THREE.MeshStandardMaterial({ vertexColors: THREE.FaceColors });
                 const wireframe = new THREE.WireframeGeometry(geometry);
                 const line = new THREE.LineSegments(wireframe);
@@ -222,86 +294,21 @@
                 line.material.opacity = 0.25;
                 line.material.transparent = true;
                 scene.add(line);
-                //console.log(scene.children[0].geometry.vertices);
             });
         }
 
-        function loadBunny() {
+        function loadSolid() {
             clearScene();
-            const loader = new THREE.OBJLoader();
-            // load a resource
-            loader.load(
-                // resource URL
-                './../images/complete_bunny.obj',
-                // called when resource is loaded
-                function (object) {
-                    scene.add(object);
-                },
-                // called when loading is in progresses
-                function (xhr) {
-                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                },
-                // called when loading has errors
-                function (error) {
-                    console.log('An error happened');
-                }
-            );
-        }
-
-        function loadNoisyBunny() {
-            clearScene();
-            const loader = new THREE.OBJLoader();
-            // load a resource
-            loader.load(
-                // resource URL
-                './../images/bun_zipper_filled.obj',
-                // called when resource is loaded
-                function (object) {
-                    scene.add(object);
-                },
-                // called when loading is in progresses
-                function (xhr) {
-                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                },
-                // called when loading has errors
-                function (error) {
-                    console.log('An error happened');
-                }
-            );
-        }
-
-        function clearScene() {
-            while (scene.children.length > 0) {
-                scene.remove(scene.children[0]);
-                console.log(scene.children.length);
+            console.log(extension)
+            if (extension === valids[1]) {
+                currentfilename = currentfilename.replace("obj", "ply").replace("off", "ply")
+                console.log(currentfilename)
             }
-            // Create a directional light to show off the object
-            var light = new THREE.PointLight(0xffffff, 1, 0);
-            light.position.set(50, 50, 50);
-            scene.add(light);
-            var ambientLight = new THREE.AmbientLight(0x404040);
-            scene.add(ambientLight);
-        }
-
-        var renderer = null,
-            scene = null,
-            camera = null;
-
-        var input = document.getElementById('file-input');
-
-        /*Get file input from HTML file upload button*/
-        input.addEventListener('change', function (event) {
-            var file = this.files[0];					//Get the input file
-            var reader = new FileReader();				//Asynchronously read file content	
-
-            /*Listener is used to wait until file is loaded*/
-            reader.addEventListener('load', function (event) {
-                var contents = event.target.result;
-                //PLY file loading
-                var loader = new THREE.PLYLoader();
-                var mesh = loader.parse(contents);		//Parse the .ply file content to get mesh
-                mesh.computeVertexNormals();
-                var material = new THREE.MeshStandardMaterial({ vertexcolors: THREE.FaceColors });
+            var loader = new THREE.PLYLoader();
+            loader.load('./../routes/' + currentfilename, function (geometry) {
+                console.log('./../routes/' + currentfilename);
+                geometry.computeVertexNormals();
+                var material = new THREE.MeshStandardMaterial({ vertexColors: THREE.FaceColors });
                 var mesh = new THREE.Mesh(mesh, material);
                 mesh.position.x = 0;
                 mesh.position.y = 0;
@@ -310,22 +317,37 @@
 
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
-                //OBJ File loading
-                //var mesh = new THREE.OBJLoader().parse(contents);		//Parse the .obj file content to get mesh
-                //
-                clearScene();
                 scene.add(mesh);
-                console.log("file loaded")
-                console.log(scene);
-            }, false);
+            });
+        }
 
-            /*Error check*/
-            if (reader.readAsBinaryString !== undefined) {
-                reader.readAsBinaryString(file);
-            } else {
-                reader.readAsArrayBuffer(file);
-            }
-        });
+        function loadFilledMesh() {
+            clearScene();
+            var loader = new THREE.PLYLoader();
+
+            loader.load('./../routes/holefill.ply', function (geometry) {
+                console.log("ply loaded");
+                geometry.computeVertexNormals();
+                var material = new THREE.MeshStandardMaterial({ color: 0xd3d3d3 });
+
+                var mesh = new THREE.Mesh(geometry, material);
+
+                mesh.position.x = 0;
+                mesh.position.y = 0;
+                mesh.position.z = 0;
+                mesh.scale.multiplyScalar(10);
+
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add(mesh);
+
+            })
+
+        }
+
+
+        var light = new THREE.PointLight(0xffffff, 1, 0);
+        var ambientLight = new THREE.AmbientLight(0x404040);
 
         function onLoad() {
             // Grab our container div
@@ -338,16 +360,13 @@
 
             // Create a new Three.js scene
             scene = new THREE.Scene();
-            scene.background = null;
             // Put in a camera
             camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
-            camera.position.set(0, 0, 3);
+            camera.position.set(0, 10, 10);
 
             // Create a directional light to show off the object
-            var light = new THREE.PointLight(0xffffff, 1, 0);
             light.position.set(50, 50, 50);
             scene.add(light);
-            var ambientLight = new THREE.AmbientLight(0x404040);
             scene.add(ambientLight);
 
             //Add controls to zoom in and out
@@ -428,35 +447,20 @@
         }
 
 
-        /*var validFileExtensions = [".ply", ".obj", ".off"];
-        function Validate(oForm) {
-            var arrInputs = oForm.getElementById("file-input");
-            console.log(arrInputs);
-            for (var i = 0; i < arrInputs.length; i++) {
-                var oInput = arrInputs[i];
-                if (oInput.type == "file") {
-                    var sFileName = oInput.value;
-                    if (sFileName.length > 0) {
-                        var blnValid = false;
-                        for (var j = 0; j < _validFileExtensions.length; j++) {
-                            var sCurExtension = _validFileExtensions[j];
-                            if (sFileName.substr(sFileName.length - sCurExtension.length, sCurExtension.length).toLowerCase() == sCurExtension.toLowerCase()) {
-                                blnValid = true;
-                                break;
-                            }
-                        }
+        var slider = document.getElementById("myRange");
+        var output = document.getElementById("demo");
+        output.innerHTML = slider.value; // Display the default slider value
 
-                        if (!blnValid) {
-                            alert("Sorry, " + sFileName + " is invalid, allowed extensions are: " + _validFileExtensions.join(", "));
-                            return false;
-                        }
-                    }
-                }
-            }
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function () {
+            output.innerHTML = this.value;
+        }
 
-            return true;
-        }*/
-
+        function adjust_light(val) {
+            console.log(val)
+            console.log(light)
+            light.intensity = val;
+        }
 
 
 

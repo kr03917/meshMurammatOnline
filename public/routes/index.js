@@ -5,16 +5,6 @@ var multer = require('multer');
 var fs = require('fs');
 var bodyParser  = require('body-parser');
 
-const pathToFile = path.join(__dirname, "detected_hole.ply")
-if (fs.existsSync(pathToFile)) {
-  try {
-    fs.unlinkSync(pathToFile)
-    console.log("Successfully deleted the file.")
-  } catch(err) {
-    throw err
-  }
-}
-
 
 router.post('/upload', function(req, res) {
   fs.writeFile('./public/uploads/bun_zipper.ply', res.body, function(err) {
@@ -55,6 +45,27 @@ router.get('/home', function(req, res, next) {
 
 router.post('/uploadfile', upload.single('mesh'), (req, res, next) => {
   console.log("file upload post req sent")
+
+  //delete existing hole highlighted and filled files
+  const pathToFile = path.join(__dirname, "detected_hole.ply")
+if (fs.existsSync(pathToFile)) {
+  try {
+    fs.unlinkSync(pathToFile)
+    console.log("Successfully deleted the file.")
+  } catch(err) {
+    throw err
+  }
+}
+
+const pathToFile2 = path.join(__dirname, "holefill.ply")
+if (fs.existsSync(pathToFile2)) {
+  try {
+    fs.unlinkSync(pathToFile2)
+    console.log("Successfully deleted the file.")
+  } catch(err) {
+    throw err
+  }
+}
   
   const file = req.file
   console.log(file)
@@ -74,8 +85,8 @@ router.post('/uploadfile', upload.single('mesh'), (req, res, next) => {
    //exec(path.join(__dirname, '/conversion_exe.exe'), [file.originalname, 'ply'], { cwd: __dirname }).toString()
   };  
 
-fun(); 
-  res.status(204).send(file)
+  fun(); 
+  res.status(204).send()
 
 
 });
@@ -85,12 +96,32 @@ router.get('/detectholes', (req, res, next) => {
 
   const filename=req.query["mesh"];
   
-  var exec = require('child_process').execFileSync;
+  var exec = require('child_process').execSync;
 
   var fun =function(){
   console.log("fun() start")
    console.log(filename);
-   exec(path.join('wine ', __dirname, '/hole_detection_executable.exe'), [filename], { cwd: __dirname }).toString()
+   exec(path.join("wine ", __dirname, '/hole_detection_executable.exe', filename), { cwd: __dirname }.toString())
+   console.log("holedetected");
+  };  
+
+fun(); 
+  res.status(204).send()
+
+
+});
+
+router.get('/fillholes', (req, res, next) => {
+  console.log("fill holes req sent")
+  console.log(req.query["mesh"])
+  const filename=req.query["mesh"];
+  
+  var exec = require('child_process').execSync;
+
+  var fun =function(){
+  console.log("fun() start")
+   console.log(filename);
+   exec(path.join("wine ", __dirname, '/my_executable.exe', filename), { cwd: __dirname }.toString())
   };  
 
 fun(); 
