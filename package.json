@@ -14,12 +14,14 @@
     "multer": "^1.4.2",
     "node-addon-api": "^3.0.2",
     "node-gyp": "^7.1.2",
-    "socket.io": "^3.0.1"
+    "socket.io": "^3.0.1",
+    "wine": "^0.9.13",
+    "wine-dummy": "^1.2.2"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "winecfg"
+    "start": "node bin/www"
   },
   "author": "",
   "license": "ISC",
