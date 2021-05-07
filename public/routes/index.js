@@ -68,7 +68,7 @@ router.post('/uploadfile', upload.single('mesh'), (req, res, next) => {
 
   var fun =function(){
    console.log("fun() start");
-   exec("wine /meshtype.exe bun_zipper.ply")
+   exec("wine app/public/routes/meshtype.exe app/public/routes/bun_zipper.ply")
    //exec(path.join('wine ', __dirname, '/meshtype.exe'), [file.originalname], { cwd: __dirname }).toString()
    //exec(path.join(__dirname, '/conversion_exe.exe'), [file.originalname, 'ply'], { cwd: __dirname }).toString()
   };  
