@@ -14,7 +14,8 @@
     "multer": "^1.4.2",
     "node-addon-api": "^3.0.2",
     "node-gyp": "^7.1.2",
-    "socket.io": "^3.0.1"
+    "socket.io": "^3.0.1",
+    "wine": "^1.6"
   },
   "devDependencies": {},
   "scripts": {
