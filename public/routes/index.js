@@ -100,7 +100,7 @@ router.get('/detectholes', (req, res, next) => {
   var fun =function(){
   console.log("fun() start")
    console.log(filename);
-   exec(path.join("wine ", __dirname, '/hole_detection_executable.exe', filename), { cwd: __dirname }.toString())
+   exec("wine" [path.join(__dirname, '/hole_detection_executable.exe', filename)], { cwd: __dirname }.toString())
    console.log("holedetected");
   };  
 
