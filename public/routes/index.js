@@ -81,7 +81,9 @@ if (fs.existsSync(pathToFile2)) {
    console.log("fun() start");
    //exec("wine");
    //exec(path.join(__dirname, "/meshtype_exe.exe"), [ file.originalname], {cwd: __dirname}).toString();
-   exec("wine", [ path.join(__dirname, "/meshtype_exe.exe"), file.originalname], {cwd: __dirname}).toString();
+   const { spawn } = require("child_process");
+    const ls = spawn("wine", [path.join( __dirname, '/meshtype.exe ', file.originalname)]);
+   //console.log(exec("wine", [ path.join(__dirname, "/meshtype_exe.exe"), file.originalname], {cwd: __dirname, shell: true}).toString());
    //exec(path.join("wine ", __dirname, '/meshtype.exe ', file.originalname), { cwd: __dirname }.toString())
    console.log("working");
    //exec(path.join(__dirname, '/conversion_exe.exe'), [file.originalname, 'ply'], { cwd: __dirname }).toString()
