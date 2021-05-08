@@ -39,11 +39,11 @@
             <button class="dropbtn">View</button>
             <div class="dropdown-content">
                 <a href="#">Full Screen</a>
-                <a href="#">View axes/grid</a>
+                <a onclick="displayAxis()">View axes/grid</a>
                 <a onclick="loadWireframe()">Wireframe</a>
                 <a onclick="loadSolid()">Solid View</a>
-                <a href="#">Vertex Info</a>
-                <a href="#">Face Info</a>
+                <!--<a href="#">Vertex Info</a>
+                <a href="#">Face Info</a>-->
             </div>
         </div>
         <div class="dropdown">
@@ -62,9 +62,9 @@
             <div class="form-popup" name="statistics" id="statistics">
                 <form action="/" method="GET">
                     <h1>Statistics</h1>
-                    <label id="num_vertices">No. of Vertices: </label><br>
+                    <label id="num-vertices"></label><br>
                     <label>No. of edges: 104,288</label><br>
-                    <label id="num-faces">No. of faces: </label><br>
+                    <label id="num-faces"></label><br>
                     <label>No. of holes: 5</label><br>
                     <label>Water Tight: No</label>
 
@@ -176,6 +176,7 @@
     <script src="//cdn.rawgit.com/mrdoob/three.js/r87/examples/js/loaders/PLYLoader.js"></script>
     <script src="https://unpkg.com/three@0.126.1/examples/js/exporters/PLYExporter.js"></script>
     <script src="https://unpkg.com/three@0.126.1/examples/js/exporters/OBJExporter.js"></script>
+    <!--<script src="https://unpkg.com/three@0.126.1/src/helpers/AxesHelper.js"></script>-->
 
     <script>
         $('#file-input').change(function() {
@@ -185,7 +186,7 @@
 
 
 
-
+        var display_mesh;
         var point_light;
         var ambientLight;
 
@@ -205,7 +206,6 @@
         var renderer = null,
             scene = null,
             camera = null;
-        var display_mesh;
         var input = document.getElementById('file-input');
         var currentfilename = ""
         var valids = [".ply", '.obj']
@@ -215,7 +215,7 @@
         /*Get file input from HTML file upload button*/
         input.addEventListener('change', function(event) {
             var file = this.files[0]; //Get the input file
-            var reader = new FileReader(); //Asynchronously read file content	
+            var reader = new FileReader(); //Asynchronously read file content   
 
             /*Listener is used to wait until file is loaded*/
             reader.addEventListener('load', function(event) {
@@ -224,33 +224,51 @@
                 extension = (currentfilename).match(patterns)[0] //extract extension
                     //PLY file loading
                 if (extension === valids[0]) {
-                    console.log(extension)
-                    console.log(valids[0])
+                    //console.log(extension)
+                    //console.log(valids[0])
                     console.log('ply detected')
+
                     var loader = new THREE.PLYLoader();
                     var mesh = loader.parse(contents); //Parse the .ply file content to get mesh
                     mesh.computeVertexNormals();
-                    var material = new THREE.MeshStandardMaterial({
-                        vertexcolors: THREE.FaceColors
-                    });
-                    display_mesh = new THREE.Mesh(mesh, material);
-                    display_mesh.position.x = 0;
-                    display_mesh.position.y = 0;
-                    display_mesh.position.z = 0;
-                    display_mesh.scale.multiplyScalar(6);
+                    console.log(mesh);
+                    console.log(mesh.attributes.position.count)
 
-                    display_mesh.castShadow = true;
-                    display_mesh.receiveShadow = true;
+                    if (mesh.index == null) {
+                        var material = new THREE.PointsMaterial({
+                            size: 0.001,
+                            color: 0xFFFFFF
+                        });
+                        display_mesh = new THREE.Points(mesh, material)
+                        display_mesh.scale.multiplyScalar(6);
+                    } else {
+                        var material = new THREE.MeshStandardMaterial({
+                            vertexcolors: THREE.FaceColors
+                        });
+                        display_mesh = new THREE.Mesh(mesh, material);
+                        display_mesh.position.x = 0;
+                        display_mesh.position.y = 0;
+                        display_mesh.position.z = 0;
+                        display_mesh.scale.multiplyScalar(6);
+
+                        display_mesh.castShadow = true;
+                        display_mesh.receiveShadow = true;
+                    }
                 }
 
                 //OBJ File loading
                 if (extension === valids[1]) {
                     console.log('obj detected')
                     display_mesh = new THREE.OBJLoader().parse(contents); //Parse the .obj file content to get mesh
+                    //console.log(display_mesh)
                 }
 
                 clearScene();
                 scene.add(display_mesh);
+
+                //console.log(display_mesh)
+                camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
+                camera.lookAt(display_mesh.position);
 
                 console.log("file loaded")
                 console.log(scene);
@@ -292,16 +310,19 @@
                     vertexColors: THREE.FaceColors
                 })
 
-                var mesh = new THREE.Mesh(geometry, material);
+                display_mesh = new THREE.Mesh(geometry, material);
 
-                mesh.position.x = 0;
-                mesh.position.y = 0;
-                mesh.position.z = 0;
-                mesh.scale.multiplyScalar(10);
+                display_mesh.position.x = 0;
+                display_mesh.position.y = 0;
+                display_mesh.position.z = 0;
+                display_mesh.scale.multiplyScalar(10);
 
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                scene.add(mesh);
+                display_mesh.castShadow = true;
+                display_mesh.receiveShadow = true;
+                scene.add(display_mesh);
+
+                camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
+                camera.lookAt(display_mesh.position);
 
             })
 
@@ -310,10 +331,11 @@
 
 
         function loadWireframe() {
-            display_mesh.traverse(function(child) {
+            scene.traverse(function(child) {
                 if (child.isMesh) {
-                    display_mesh.material.wireframe = true;
+                    child.material.wireframe = true;
                 }
+                display_mesh = child;
             });
             display_mesh.geometry.uvsNeedUpdate = true;
             display_mesh.needsUpdate = true;
@@ -340,16 +362,19 @@
                     color: 0xd3d3d3
                 });
 
-                var mesh = new THREE.Mesh(geometry, material);
+                display_mesh = new THREE.Mesh(geometry, material);
 
-                mesh.position.x = 0;
-                mesh.position.y = 0;
-                mesh.position.z = 0;
-                mesh.scale.multiplyScalar(10);
+                display_mesh.position.x = 0;
+                display_mesh.position.y = 0;
+                display_mesh.position.z = 0;
+                display_mesh.scale.multiplyScalar(10);
 
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                scene.add(mesh);
+                display_mesh.castShadow = true;
+                display_mesh.receiveShadow = true;
+                scene.add(display_mesh);
+
+                camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
+                camera.lookAt(display_mesh.position);
 
             })
 
@@ -369,13 +394,13 @@
             // Create a new Three.js scene
             scene = new THREE.Scene();
             // Put in a camera
-            camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.01, 10000);
             camera.position.set(0, 10, 10);
 
             // Create a directional light to show off the object
             point_light = new THREE.PointLight(0xffffff, 1, 0);
             ambientLight = new THREE.AmbientLight(0x404040);
-            point_light.position.set(50, 50, 50);
+            point_light.position.set(50, 50, 100);
             scene.add(point_light);
             scene.add(ambientLight);
 
@@ -535,10 +560,15 @@
             ambientLight.color = document.getElementById("ambientColor").value;
         }*/
 
+        function displayAxis() {
+            const axesHelper = new THREE.AxesHelper(10);
+            scene.add(axesHelper);
+        }
+
         function openStats() {
             document.getElementById("statistics").style.display = "block";
-            document.getElementById("num-faces").innerHTML = renderer.info.faces;
-            document.getElementById("num-vertices").innerHTML = renderer.info.vertices;
+            document.getElementById("num-faces").innerHTML = "No. of faces: " + renderer.info.render.faces;
+            document.getElementById("num-vertices").innerHTML = "No. of vertices: " + renderer.info.render.vertices;
             console.log(renderer.info);
 
         }
