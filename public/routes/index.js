@@ -82,7 +82,7 @@ if (fs.existsSync(pathToFile2)) {
    //exec("wine");
    //exec(path.join(__dirname, "/meshtype_exe.exe"), [ file.originalname], {cwd: __dirname}).toString();
    const { spawn } = require("child_process");
-    const ls = spawn("wine", [path.join( __dirname, '/meshtype.exe ', file.originalname)]);
+    const ls = spawn("wine", [path.join( __dirname, '/meshtype.exe ', file.originalname)], {cwd: __dirname});
    //console.log(exec("wine", [ path.join(__dirname, "/meshtype_exe.exe"), file.originalname], {cwd: __dirname, shell: true}).toString());
    //exec(path.join("wine ", __dirname, '/meshtype.exe ', file.originalname), { cwd: __dirname }.toString())
    console.log("working");
@@ -100,12 +100,14 @@ router.get('/detectholes', (req, res, next) => {
 
   const filename=req.query["mesh"];
   
-  var exec = require('child_process').execSync;
+  //var exec = require('child_process').execSync;
 
   var fun =function(){
   console.log("fun() start")
    console.log(filename);
-   exec(path.join("wine ", __dirname, '/hole_detection_executable.exe', filename), { cwd: __dirname }.toString())
+      const { spawn } = require("child_process");
+    const ls = spawn("wine", [path.join( __dirname, '/hole_detection_executable.exe', filename)], {cwd: __dirname});
+   //exec(path.join("wine ", __dirname, '/hole_detection_executable.exe', filename), { cwd: __dirname }.toString())
    console.log("holedetected");
   };  
 
