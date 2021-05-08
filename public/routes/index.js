@@ -106,7 +106,7 @@ router.get('/detectholes', (req, res, next) => {
   console.log("fun() start")
    console.log(filename);
       const { spawn } = require("child_process");
-    const ls = spawn("wine", [path.join( __dirname, '/hole_detection_executable.exe', filename)], {cwd: __dirname});
+    const ls = spawn("wine", [path.join( __dirname, '/hole_detection_executable.exe', filename)], {cwd: __dirname, shell:true});
    //exec(path.join("wine ", __dirname, '/hole_detection_executable.exe', filename), { cwd: __dirname }.toString())
    console.log("holedetected");
   };  
