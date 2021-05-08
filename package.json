@@ -15,7 +15,8 @@
     "node-addon-api": "^3.0.2",
     "node-gyp": "^7.1.2",
     "socket.io": "^3.0.1",
-    "wine": "^0.9.13"
+    "wine": "^0.9.13",
+    "wine-dummy": "^1.2.2"
   },
   "devDependencies": {},
   "scripts": {
