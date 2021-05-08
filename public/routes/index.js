@@ -96,11 +96,11 @@ router.get('/detectholes', (req, res, next) => {
 
   const filename=req.query["mesh"];
   
-  var exec = require('child_process').spawnSync;
+  //var exec = require('child_process').spawnSync;
   var fun =function(){
   console.log("fun() start")
    console.log(filename);
-   exec("wine", [path.join(__dirname, '/hole_detection_executable.exe', filename)], { cwd: __dirname })
+  exec("wine", ["/hole_detection_executable.exe", filename], {cwd: __dirname})
    console.log("holedetected");
   };  
 
