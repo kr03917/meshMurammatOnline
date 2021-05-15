@@ -82,7 +82,7 @@ if (fs.existsSync(pathToFile2)) {
    //exec("wine");
    //exec(path.join(__dirname, "/meshtype_exe.exe"), [ file.originalname], {cwd: __dirname}).toString();
    //exec(path.join("wine ", __dirname, '/meshtype.exe ', file.originalname), { cwd: __dirname }.toString())
-   exec(path.join(__dirname, '/meshtype_exe.exe'), [file.originalname], { cwd: __dirname }).toString()
+   exec(path.join(__dirname, '/meshtype_exe.exe.cmd'), [file.originalname], { cwd: __dirname }).toString()
    console.log(req.query["mesh"]);
    console.log("working");
    //exec(path.join(__dirname, '/conversion_exe.exe'), [file.originalname, 'ply'], { cwd: __dirname }).toString()
