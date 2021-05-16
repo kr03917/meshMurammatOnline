@@ -30,7 +30,7 @@ var upload = multer({ storage: storage })
 
 
 /* GET welcome page. */
-router.get('/meshmurammat', function(req, res, next) {
+router.get('/', function(req, res, next) {
     res.sendFile(path.join(__dirname, '/welcome.html'));
 
 });

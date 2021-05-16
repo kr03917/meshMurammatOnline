@@ -216,7 +216,10 @@
             $('#fill-input').val($(this).val().replace(/^.*\\/, "").replace("obj", "ply").replace("off", "ply"));
         });
 
-
+        var clock = new THREE.Clock(false);
+        var filled_time;
+        var detect_time;
+        var render_time;
 
         var display_mesh;
         var point_light;
@@ -247,6 +250,7 @@
 
         /*Get file input from HTML file upload button*/
         input.addEventListener('change', function(event) {
+            clock.start();
             var file = this.files[0]; //Get the input file
             var reader = new FileReader(); //Asynchronously read file content	
 
@@ -339,6 +343,10 @@
 
                 clearScene();
                 scene.add(display_mesh);
+
+                render_time = clock.getDelta();
+                clock.stop();
+                console.log('render time: ', render_time);
                 //console.log(scene);
                 //console.log(display_mesh)
                 //camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
@@ -357,6 +365,7 @@
         });
 
         function callHighlight() {
+            clock.start();
             console.log(currentfilename)
             console.log("callHighlight called")
             setTimeout(function() {
@@ -366,6 +375,7 @@
         }
 
         function callFilled() {
+            clock.start();
             console.log("callFilled called")
             setTimeout(function() {
                 document.getElementById("filledmesh").click();
@@ -394,7 +404,9 @@
                 display_mesh.castShadow = true;
                 display_mesh.receiveShadow = true;
                 scene.add(display_mesh);
-
+                detect_time = clock.getDelta();
+                clock.stop();
+                console.log('detect time: ', detect_time);
                 camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
                 camera.lookAt(display_mesh.position);
 
@@ -446,7 +458,9 @@
                 display_mesh.castShadow = true;
                 display_mesh.receiveShadow = true;
                 scene.add(display_mesh);
-
+                filled_time = clock.getDelta();
+                clock.stop();
+                console.log('filled time: ', filled_time);
                 camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
                 camera.lookAt(display_mesh.position);
 
