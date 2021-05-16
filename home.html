@@ -39,7 +39,8 @@
             <button class="dropbtn">View</button>
             <div class="dropdown-content">
                 <a href="#">Full Screen</a>
-                <a onclick="displayAxis()">View axes/grid</a>
+                <a onclick="displayAxis()">View axes</a>
+                <a onclick="displayGrid()">View grid</a>
                 <a onclick="loadWireframe()">Wireframe</a>
                 <a onclick="loadSolid()">Solid View</a>
                 <!--<a href="#">Vertex Info</a>
@@ -62,11 +63,13 @@
             <div class="form-popup" name="statistics" id="statistics">
                 <form action="/" method="GET">
                     <h1>Statistics</h1>
+                    <label id="mesh-type"></label><br>
                     <label id="num-vertices"></label><br>
-                    <label>No. of edges: 104,288</label><br>
+                    <!--<label>No. of edges: 104,288</label><br>-->
                     <label id="num-faces"></label><br>
                     <label>No. of holes: 5</label><br>
-                    <label>Water Tight: No</label><br>
+                    <label id="render-time"></label><br>
+                    <!--<label>Water Tight: No</label><br>-->
 
                     <button type="button" onclick="closeStats()">OK</button>
                 </form>
@@ -210,21 +213,20 @@
 
 
 
+
     <script>
         $('#file-input').change(function() {
             $('#hole-input').val($(this).val().replace(/^.*\\/, "").replace("obj", "ply").replace("off", "ply"));
             $('#fill-input').val($(this).val().replace(/^.*\\/, "").replace("obj", "ply").replace("off", "ply"));
         });
 
-
         var clock = new THREE.Clock(false);
         var render_time;
-        var detect_time;
-        var fill_time;
         var display_mesh;
         var point_light;
         var ambientLight;
         var vertex_count;
+        var mesh_type;
 
         function clearScene() {
             while (scene.children.length > 0) {
@@ -272,6 +274,10 @@
                     console.log(mesh.attributes.position.count)
                     vertex_count = mesh.attributes.position.count;
 
+                    //var edges = 3 * vertex_count - 3 -
+                    //    console.log(edges);
+                    //console.log(line);
+
                     if (mesh.index == null) {
                         var material = new THREE.PointsMaterial({
                             size: 0.001,
@@ -279,6 +285,7 @@
                         });
                         display_mesh = new THREE.Points(mesh, material)
                         display_mesh.scale.multiplyScalar(6);
+                        mesh_type = "Point Cloud";
                     } else {
                         var material = new THREE.MeshStandardMaterial({
                             vertexcolors: THREE.FaceColors
@@ -291,6 +298,7 @@
 
                         display_mesh.castShadow = true;
                         display_mesh.receiveShadow = true;
+                        mesh_type = "Triangular Mesh";
                     }
                 }
 
@@ -298,7 +306,9 @@
                 if (extension === valids[1]) {
                     console.log('obj detected')
                     display_mesh = new THREE.OBJLoader().parse(contents); //Parse the .obj file content to get mesh
-                    console.log(display_mesh)
+                    console.log(display_mesh);
+                    console.log(render_time);
+                    mesh_type = "Triangular Mesh";
                 }
 
                 if (extension === ".off") {
@@ -343,13 +353,16 @@
 
                 clearScene();
                 scene.add(display_mesh);
+                render_time = clock.getDelta();
+                clock.stop();
+                console.log('render time: ', render_time);
                 //console.log(scene);
                 //console.log(display_mesh)
                 //camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
                 //camera.lookAt(display_mesh.position);
-                render_time = clock.getDelta();
-                clock.stop();
-                console.log('render time: ', render_time);
+
+                console.log("file loaded")
+                console.log(scene);
             }, false);
 
             /*Error check*/
@@ -361,21 +374,20 @@
         });
 
         function callHighlight() {
-            clock.start();
             console.log(currentfilename)
+            console.log("callHighlight called")
             setTimeout(function() {
                 document.getElementById("displaymesh").click();
-            }, 1000)
-            
-            
+            }, 120000)
+            console.log("callHighlight ended")
         }
 
         function callFilled() {
-            clock.start();
+            console.log("callFilled called")
             setTimeout(function() {
                 document.getElementById("filledmesh").click();
-            }, 1000)
-            
+            }, 15000)
+            console.log("callFilled ended")
         }
 
         function loadHoleHighlight() {
@@ -404,9 +416,7 @@
                 camera.lookAt(display_mesh.position);
 
             })
-            detect_time = clock.getDelta();
-            clock.stop();
-            console.log('detect time: ', detect_time);
+
         }
 
 
@@ -423,10 +433,11 @@
         }
 
         function loadSolid() {
-            display_mesh.traverse(function(child) {
+            scene.traverse(function(child) {
                 if (child.isMesh) {
-                    display_mesh.material.wireframe = false;
+                    child.material.wireframe = false;
                 }
+		display_mesh=child;
             });
             display_mesh.geometry.uvsNeedUpdate = true;
             display_mesh.needsUpdate = true;
@@ -442,7 +453,7 @@
                 var material = new THREE.MeshStandardMaterial({
                     color: 0xd3d3d3
                 });
-
+                vertex_count = geometry.attributes.position.count;
                 display_mesh = new THREE.Mesh(geometry, material);
 
                 display_mesh.position.x = 0;
@@ -458,9 +469,7 @@
                 camera.lookAt(display_mesh.position);
 
             })
-            fill_time = clock.getDelta();
-            clock.stop();
-            console.log('filling time: ', fill_time);
+
         }
 
         function onLoad() {
@@ -483,7 +492,7 @@
             // Create a directional light to show off the object
             point_light = new THREE.PointLight(0xffffff, 1, 0);
             ambientLight = new THREE.AmbientLight(0x404040);
-            point_light.position.set(50, 50, 100);
+            point_light.position.set(50, 20, 20);
             scene.add(point_light);
             scene.add(ambientLight);
 
@@ -655,18 +664,54 @@
             ambientLight.color = document.getElementById("ambientcolor").value;
         }
 
+        //var axesHelper;
+
         function displayAxis() {
-            const axesHelper = new THREE.AxesHelper(10);
+            scene.traverse(function(child) {
+                if (child.isMesh) {
+                    display_mesh = child;
+                }
+                if (child instanceof THREE.AxesHelper) {
+                    scene.remove(child);
+                }
+            });
+            //var selected = scene.getObjectByName(axesHelper.name);
+            //scene.remove(selected);
+            console.log(scene);
+            display_mesh.geometry.computeBoundingBox();
+            var bbox = display_mesh.geometry.boundingBox;
+            //console.log(bbox);
+            console.log(bbox.max)
+            var scale = Math.max(bbox.max.x, bbox.max.y, bbox.max.z);
+            console.log(scale);
+            if (scale < 5) {
+                scale = 5;
+            }
+            const axesHelper = new THREE.AxesHelper(scale);
+            //axesHelper.name = "axis";
             scene.add(axesHelper);
+        }
+
+        function displayGrid() {
+            const gridHelper = new THREE.GridHelper(50, 50);
+            scene.add(gridHelper);
         }
 
         function openStats() {
             document.getElementById("statistics").style.display = "block";
             document.getElementById("num-faces").innerHTML = "No. of faces: " + renderer.info.render.faces;
             document.getElementById("num-vertices").innerHTML = "No. of vertices: " + vertex_count;
+            document.getElementById("mesh-type").innerHTML = "Type of Mesh: " + mesh_type;
+            document.getElementById("render-time").innerHTML = "Approximate Render Time: " + Math.round(render_time * 100) / 100;
             console.log(renderer.info);
-
         }
+
+        /*function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        window.addEventListener('resize', onWindowResize, false);*/
     </script>
 
 
