@@ -66,7 +66,7 @@
                     <label>No. of edges: 104,288</label><br>
                     <label id="num-faces"></label><br>
                     <label>No. of holes: 5</label><br>
-                    <label>Water Tight: No</label>
+                    <label>Water Tight: No</label><br>
 
                     <button type="button" onclick="closeStats()">OK</button>
                 </form>
@@ -96,31 +96,61 @@
         <div id="viewoptions">
             <p id="adjustments">Adjustments</p>
             <button class="accordion view">Lighting</button>
-            <div class="panel">
-                <button type="button" class="collapsible">Point Light</button>
-                <p>Intensity:</p>
-                <p id="demo"></p>
-                <input type="range" min="1" max="1000" value="100" class="slider" id="myRange" onchange="adjust_light(slider.value)"><br>
-                <p>X: <input type="number" id="x" name="x" min="1" max="100"><br> Y: <input type="number" id="y" name="y" min="1" max="100"><br> Z: <input type="number" id="z" name="z" min="1" max="100"><br>
-                    <button type="submit" onclick="update_lightpos(slider.value, x.value, y.value, z.value)">Change</button></p>
+            <div class="subpanel">
+                <button class="accordion view">Point Light</button>
+                <div class="innerpanel">
+                    <p>Intensity:</p>
+                    <p id="demo"></p>
+                    <input type="range" min="1" max="100" value="50" class="slider" id="myRange"><br>
+                    <p>X: <input type="number" id="x" name="x" min="1" max="100"><br> Y: <input type="number" id="y" name="y" min="1" max="100"><br> Z: <input type="number" id="z" name="z" min="1" max="100"><br>
+                        <button onclick="update_lightpos(slider.value, x.value, y.value, z.value)">Change</button>
+                    </p>
+                </div>
 
-                <!--<button type="button" class="collapsible">Ambient Light</button>
-                <p><label for="ambientColor">Color: </label> <textarea id="ambientColor" name="ambientColor" placeholder="0xffffff" rows=1></textarea>
-                    <button type="submit" onclick="update_ambient()">Change</button></p>-->
+                <button class="accordion view">AmbientLight</button>
+                <div class="innerpanel">
+                    <label for="ambientcolor">Color:</label>
+                    <input type="color" id="ambientcolor" name="favcolor" value="#ff0000">
+                    <button onclick="update_ambient()">Change</button>
+                </div>
+
+
             </div>
 
             <button class="accordion view">Material</button>
-            <div class="panel">
-                <button name="basic" id="shading-button" onclick="basicMaterial()">Basic</button>
+            <div class="subpanel">
+                <button class="accordion view">Basic</button>
+                <div class="innerpanel">
+                    <label for="basiccolor">Color:</label>
+                    <input type="color" id="basiccolor" name="favcolor" value="#ff0000">
+                    <button onclick="basicMaterial()">Change</button>
+                </div>
 
-                <!--<button type="button" class="collapsible" onclick="basicMaterial()">Basic Material</button>
-                <form id="basicColor">
-                    <label for="favcolor">Color: </label>
-                    <input type="color" id="favcolor" name="favcolor" value="#ff0000"><br><br>
-                    <input id="basic-material-color" type="submit" onclick="basicMaterial(color.value)">
-                </form>-->
-                <button name="lambert" id="shading-button" onclick="lambertMaterial()">Lambert</button>
-                <button name="phong" id="shading-button" onclick="phongMaterial()">Phong</button>
+                <button class="accordion view">Lambert</button>
+                <div class="innerpanel">
+                    <label for="lambertcolor">Color:</label>
+                    <input type="color" id="lambertcolor" name="favcolor" value="#049ef4"><br>
+                    <label for="lambertemissivecolor">Emissive:</label>
+                    <input type="color" id="lambertemissivecolor" name="favcolor" value="#000000"><br>
+                    <button onclick="lambertMaterial()">Change</button>
+                </div>
+
+                <button class="accordion view">Phong</button>
+                <div class="subpanel">
+                    <label for="phongcolor">Color:</label>
+                    <input type="color" id="phongcolor" name="favcolor" value="#049ef4"><br>
+                    <label for="phongemissivecolor">Emissive:</label>
+                    <input type="color" id="phongemissivecolor" name="favcolor" value="#000000"><br>
+                    <label for="phongspecularcolor">Specular:</label>
+                    <input type="color" id="phongspecularcolor" name="favcolor" value="#111111"><br>
+                    <label for="phongshininess">Shininess: </label>
+                    <p id="demo_shininess"></p>
+                    <input type="range" min="0" max="100" value="30" class="slider" id="phongshininess"><br>
+                    <label for="phongflatshading">Flat Shading</label>
+                    <input type="checkbox" id="phongflatshading" checked="false"><br>
+                    <button onclick="phongMaterial()">Change</button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -167,6 +197,7 @@
             });
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/87/three.min.js"></script>
     <script type="module">
         import * as THREE from './../../routes/three.module.js';
@@ -176,7 +207,8 @@
     <script src="//cdn.rawgit.com/mrdoob/three.js/r87/examples/js/loaders/PLYLoader.js"></script>
     <script src="https://unpkg.com/three@0.126.1/examples/js/exporters/PLYExporter.js"></script>
     <script src="https://unpkg.com/three@0.126.1/examples/js/exporters/OBJExporter.js"></script>
-    <!--<script src="https://unpkg.com/three@0.126.1/src/helpers/AxesHelper.js"></script>-->
+
+
 
     <script>
         $('#file-input').change(function() {
@@ -185,10 +217,14 @@
         });
 
 
-
+        var clock = new THREE.Clock(false);
+        var render_time;
+        var detect_time;
+        var fill_time;
         var display_mesh;
         var point_light;
         var ambientLight;
+        var vertex_count;
 
         function clearScene() {
             while (scene.children.length > 0) {
@@ -214,8 +250,9 @@
 
         /*Get file input from HTML file upload button*/
         input.addEventListener('change', function(event) {
+            clock.start();
             var file = this.files[0]; //Get the input file
-            var reader = new FileReader(); //Asynchronously read file content   
+            var reader = new FileReader(); //Asynchronously read file content	
 
             /*Listener is used to wait until file is loaded*/
             reader.addEventListener('load', function(event) {
@@ -231,8 +268,9 @@
                     var loader = new THREE.PLYLoader();
                     var mesh = loader.parse(contents); //Parse the .ply file content to get mesh
                     mesh.computeVertexNormals();
-                    console.log(mesh);
+                    //console.log(mesh);
                     console.log(mesh.attributes.position.count)
+                    vertex_count = mesh.attributes.position.count;
 
                     if (mesh.index == null) {
                         var material = new THREE.PointsMaterial({
@@ -260,18 +298,58 @@
                 if (extension === valids[1]) {
                     console.log('obj detected')
                     display_mesh = new THREE.OBJLoader().parse(contents); //Parse the .obj file content to get mesh
-                    //console.log(display_mesh)
+                    console.log(display_mesh)
+                }
+
+                if (extension === ".off") {
+                    var loader = new THREE.PLYLoader();
+                    var new_filename = currentfilename.slice(0, -3) + "ply";
+                    console.log(new_filename);
+                    /*setTimeout(function() {
+                        loader.load('./../routes/' + new_filename, function(geometry) {
+                            console.log('./../routes/' + new_filename);
+                            geometry.computeVertexNormals();
+                            var material = new THREE.MeshStandardMaterial({
+                                vertexColors: THREE.FaceColors
+                            });
+                        });
+                    }, 60000);*/
+
+                    loader.load('./../routes/' + new_filename, function(geometry) {
+                        console.log('./../routes/' + new_filename);
+                        geometry.computeVertexNormals();
+                        var material = new THREE.MeshStandardMaterial({
+                            vertexColors: THREE.FaceColors
+                        });
+                        display_mesh = new THREE.Mesh(geometry, material);
+                        console.log(display_mesh)
+                        display_mesh.position.x = 0;
+                        display_mesh.position.y = 0;
+                        display_mesh.position.z = 0;
+                        console.log(display_mesh);
+                    });
+                    //display_mesh = new THREE.Mesh(mesh, material);
+
+                    //console.log(display_mesh);
+                    /*var loader = new THREE.PLYLoader();
+                    var mesh = loader.parse(contents); //Parse the .ply file content to get mesh
+                    mesh.computeVertexNormals();
+                    
+                    console.log(mesh.attributes.position.count)*/
+                    //vertex_count = mesh.attributes.position.count;4
+
+                    scene.add(display_mesh);
                 }
 
                 clearScene();
                 scene.add(display_mesh);
-
+                //console.log(scene);
                 //console.log(display_mesh)
-                camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
-                camera.lookAt(display_mesh.position);
-
-                console.log("file loaded")
-                console.log(scene);
+                //camera.position.set(display_mesh.position.x, display_mesh.position.x, 100);
+                //camera.lookAt(display_mesh.position);
+                render_time = clock.getDelta();
+                clock.stop();
+                console.log('render time: ', render_time);
             }, false);
 
             /*Error check*/
@@ -283,20 +361,21 @@
         });
 
         function callHighlight() {
+            clock.start();
             console.log(currentfilename)
-            console.log("callHighlight called")
             setTimeout(function() {
                 document.getElementById("displaymesh").click();
-            }, 15000)
-            console.log("callHighlight ended")
+            }, 1000)
+            
+            
         }
 
         function callFilled() {
-            console.log("callFilled called")
+            clock.start();
             setTimeout(function() {
                 document.getElementById("filledmesh").click();
-            }, 10000)
-            console.log("callFilled ended")
+            }, 1000)
+            
         }
 
         function loadHoleHighlight() {
@@ -325,7 +404,9 @@
                 camera.lookAt(display_mesh.position);
 
             })
-
+            detect_time = clock.getDelta();
+            clock.stop();
+            console.log('detect time: ', detect_time);
         }
 
 
@@ -377,7 +458,9 @@
                 camera.lookAt(display_mesh.position);
 
             })
-
+            fill_time = clock.getDelta();
+            clock.stop();
+            console.log('filling time: ', fill_time);
         }
 
         function onLoad() {
@@ -485,48 +568,57 @@
         }
 
 
-        function basicMaterial(color) {
-            //var basic_color = document.getElementById("basic_material_color");
-            //console.log(color)
-            display_mesh.traverse(function(child) {
+        function basicMaterial() {
+            basic_color = document.getElementById("basiccolor").value;
+            scene.traverse(function(child) {
                 if (child.isMesh) {
-                    display_mesh.material = new THREE.MeshBasicMaterial({
-                        color: 0xFFFFFF
+                    child.material = new THREE.MeshBasicMaterial({
+                        color: basic_color
                     });
                 }
+                display_mesh = child;
             });
             display_mesh.geometry.uvsNeedUpdate = true;
             display_mesh.needsUpdate = true;
         }
 
         function lambertMaterial() {
-            display_mesh.traverse(function(child) {
+            scene.traverse(function(child) {
+                var lambert_color = document.getElementById("lambertcolor").value;
+                var lambert_emissive = document.getElementById("lambertemissivecolor").value;
                 if (child.isMesh) {
-                    display_mesh.material = new THREE.MeshLambertMaterial({
-                        color: 0x49ef4,
+                    child.material = new THREE.MeshLambertMaterial({
+                        color: lambert_color,
                         reflectivity: 10,
                         refractionRatio: 0.98,
-                        emissive: 0x000000
+                        emissive: lambert_emissive
                     });
                 }
+                display_mesh = child;
             });
             display_mesh.geometry.uvsNeedUpdate = true;
             display_mesh.needsUpdate = true;
         }
 
         function phongMaterial() {
-            display_mesh.traverse(function(child) {
+            var phong_color = document.getElementById("phongcolor").value;
+            var phong_emissive = document.getElementById("phongemissivecolor").value;
+            var phong_specular = document.getElementById("phongspecularcolor").value;
+            var phong_shininess = document.getElementById("phongshininess").value;
+            var phong_flatshading = document.getElementById("phongflatshading").checked;
+            scene.traverse(function(child) {
                 if (child.isMesh) {
-                    display_mesh.material = new THREE.MeshPhongMaterial({
-                        color: 0x27893b,
-                        emissive: 0x000000,
-                        specular: 0x111111,
-                        shininess: 30,
-                        flatShading: false,
+                    child.material = new THREE.MeshPhongMaterial({
+                        color: phong_color,
+                        emissive: phong_emissive,
+                        specular: phong_specular,
+                        shininess: phong_shininess,
+                        flatShading: phong_flatshading,
                         reflectivity: 1,
                         refractionRatio: 0.98,
                     });
                 }
+                display_mesh = child;
             });
             display_mesh.geometry.uvsNeedUpdate = true;
             display_mesh.needsUpdate = true;
@@ -537,28 +629,31 @@
         var output = document.getElementById("demo");
         output.innerHTML = slider.value; // Display the default slider value
 
+        var slider2 = document.getElementById("phongshininess");
+        var shininess_output = document.getElementById("demo_shininess");
+        shininess_output.innerHTML = slider2.value; // Display the default slider value
+
         // Update the current slider value (each time you drag the slider handle)
         slider.oninput = function() {
             output.innerHTML = this.value;
         }
 
-        function adjust_light(val) {
-            console.log(val)
-                //console.log(light)
-            point_light.intensity = val;
+        slider2.oninput = function() {
+            shininess_output.innerHTML = this.value;
         }
 
         function update_lightpos(val, x, y, z) {
-            console.log(x, y, z)
-            console.log(val)
+            //console.log(x, y, z)
+            //console.log(val)
             point_light.position.set(x, y, z);
             point_light.intensity = val;
         }
 
-        /*function update_ambient(color) {
-            console.log(document.getElementById("ambientColor").value)
-            ambientLight.color = document.getElementById("ambientColor").value;
-        }*/
+        function update_ambient() {
+            //console.log(document.getElementById("ambientcolor").value)
+            //console.log(scene)
+            ambientLight.color = document.getElementById("ambientcolor").value;
+        }
 
         function displayAxis() {
             const axesHelper = new THREE.AxesHelper(10);
@@ -568,7 +663,7 @@
         function openStats() {
             document.getElementById("statistics").style.display = "block";
             document.getElementById("num-faces").innerHTML = "No. of faces: " + renderer.info.render.faces;
-            document.getElementById("num-vertices").innerHTML = "No. of vertices: " + renderer.info.render.vertices;
+            document.getElementById("num-vertices").innerHTML = "No. of vertices: " + vertex_count;
             console.log(renderer.info);
 
         }
